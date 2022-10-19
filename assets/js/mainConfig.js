@@ -125,22 +125,20 @@ function getColor() {
 
 function createControls() {
     console.log('CONTROL')
-    setTimeout(() => {
-        AFRAME.registerComponent('screen-controls', {
-            init: function () {
-                this.component = document.getElementById("camera").components["extended-wasd-controls"];
-                this.joystick1 = new Joystick("stick1", 64, 8);
-                console.log("controls initialized");
-                document.getElementById('uiDiv').style.display = 'block';
-            },
-        
-            tick: function (time, deltaTime) {
-                this.component.movePercent.x = this.joystick1.value.x ;
-                this.component.movePercent.z = -this.joystick1.value.y;
-        
-            }
-        });
-    }, 100)
+    AFRAME.registerComponent('screen-controls', {
+        init: function () {
+            this.component = document.getElementById("camera").components["extended-wasd-controls"];
+            this.joystick1 = new Joystick("stick1", 64, 8);
+            console.log("controls initialized");
+            document.getElementById('uiDiv').style.display = 'block';
+        },
+    
+        tick: function (time, deltaTime) {
+            this.component.movePercent.x = this.joystick1.value.x ;
+            this.component.movePercent.z = -this.joystick1.value.y;
+    
+        }
+    });
 }
 
 socket.on('newPlayer', (playerinfo) => {
