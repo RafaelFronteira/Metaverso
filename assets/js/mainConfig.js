@@ -42,7 +42,7 @@ function startPlayer() {
             id: playerID,
             name: playerName,
             color: getColor(),
-            position: { x: 0, y: 0, z: 0 }
+            position: { x: 0, y: 1.3, z: 0 }
         }
 
         socket.emit('add', player);
@@ -52,11 +52,8 @@ function startPlayer() {
 }
 
 function createPlayer(id, name, color, position) {
-    const playerEntity = document.createElement('a-entity');
-    const playerCamera = document.createElement('a-camera');
-    const playerBox = document.createElement('a-box');
+    // cria o texto do nome do user
     const playerText = document.createElement('a-text');
-
     const playerTextAttr = document.createAttribute('position');
     playerTextAttr.value = `-0.033 0.9 -0.032`;
     playerText.setAttributeNode(playerTextAttr);
@@ -64,25 +61,32 @@ function createPlayer(id, name, color, position) {
     playerText.setAttribute('color', 'white');
     playerText.setAttribute('side', 'double');
     playerText.setAttribute('align', 'center');
-
-
-
-    playerEntity.setAttribute('id', id);
-    playerEntity.setAttribute('player-move', "controllerListenerId: #controller-data; navigationMeshClass: environmentGround;");
-
+    
+    //cria o quadrado do user
+    const playerBox = document.createElement('a-box');
     playerBox.setAttribute('color', color);
-    playerBox.appendChild(playerText)
-    playerCamera.appendChild(playerBox);
+    playerBox.appendChild(playerText);
 
+    // cria a camera do user
+    const playerCamera = document.createElement('a-camera');
     const playerPosition = document.createAttribute('position');
     playerPosition.value = `${position.x} ${position.y} ${position.z}`
     playerCamera.setAttribute('do-something-once-loaded', '');
     playerCamera.setAttributeNode(playerPosition);
-    playerCamera.setAttribute('extended-wasd-controls', 'flyEnabled: true; inputType: joystick;')
-    
-    playerCamera.setAttribute('id', 'camera')
+    playerCamera.setAttribute('extended-wasd-controls', 'flyEnabled: true; inputType: joystick;');
+    playerCamera.setAttribute('id', 'camera');
+    playerCamera.appendChild(playerBox);
+
+    const component = playerCamera.components["extended-wasd-controls"];
+    const joystick = new Joystick("stick1", 64, 8);
+    console.log("controls initialized: ", component, joystick);
+    createControls(component, joystick);
 
 
+    // Cria a entity do user
+    const playerEntity = document.createElement('a-entity');
+    playerEntity.setAttribute('id', id);
+    playerEntity.setAttribute('player-move', "controllerListenerId: #controller-data; navigationMeshClass: environmentGround;");
     playerEntity.appendChild(playerCamera);
 
     return playerEntity;
@@ -122,21 +126,12 @@ function getColor() {
     return `#${a}${b}${c}${d}${e}${f}`;
 }
 
-
-function createControls() {
+function createControls(component, joystick) {
     console.log('CONTROL')
     AFRAME.registerComponent('screen-controls', {
-        init: function () {
-            this.component = document.getElementById("camera").components["extended-wasd-controls"];
-            this.joystick1 = new Joystick("stick1", 64, 8);
-            console.log("controls initialized");
-            document.getElementById('uiDiv').style.display = 'block';
-        },
-    
         tick: function (time, deltaTime) {
-            this.component.movePercent.x = this.joystick1.value.x ;
-            this.component.movePercent.z = -this.joystick1.value.y;
-    
+            component.movePercent.x = joystick.value.x ;
+            component.movePercent.z = -joystick.value.y;
         }
     });
 }
@@ -146,14 +141,13 @@ socket.on('newPlayer', (playerinfo) => {
     const newPlayer = playerinfo.player;
     const $player = createPlayer(newPlayer.id, newPlayer.name, newPlayer.color, newPlayer.position);
     mapa.appendChild($player);
+    document.getElementById('uiDiv').style.display = 'block';
 
     //monta todos os players que já estão online
     playerinfo.players.forEach(p => {
         const $OtherPlayer = createOtherPlayer(p.id, p.name, p.color, p.position);
         mapa.appendChild($OtherPlayer);
     });
-
-    createControls();
 });
 
 socket.on('somePlayerAdded', (player) => {
