@@ -8,21 +8,21 @@
     <script src="https://cdn.socket.io/4.5.3/socket.io.min.js"></script>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script>
-        const socket = io('http://localhost:3000');
+        const socket = io('https://projeto-metaverso.herokuapp.com/');
         let playerID = "";
-        
+
         // executar para limpar a lista de players n jogaveis do server
         const playerToRemove = sessionStorage.getItem('remove-player');
         if (playerToRemove) {
             socket.emit('remove', playerToRemove);
         }
-        
+
         const hexaRange = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
-        
+
 
         // função para saber onde que o jogador está
         AFRAME.registerComponent("trackplayer", {
-            tick: function() {
+            tick: function () {
                 socket.emit('move', {
                     id: playerID,
                     position: this.el.object3D.position
@@ -32,7 +32,7 @@
 
         // função faz o set do evento tick no jogador
         AFRAME.registerComponent("do-something-once-loaded", {
-        init: function() {
+            init: function () {
                 this.el.setAttribute('trackplayer', '');
             }
         });
@@ -42,7 +42,7 @@
 
             sessionStorage.removeItem('username');
             playerID = playerName.toLocaleLowerCase().replaceAll(' ', '_');
-            
+
             sessionStorage.setItem('remove-player', playerID);
 
             if (playerName) {
@@ -50,7 +50,7 @@
                     id: playerID,
                     name: playerName,
                     color: getColor(),
-                    position: {x: 0, y: 0, z: 0}
+                    position: { x: 0, y: 0, z: 0 }
                 }
 
                 socket.emit('add', player);
@@ -77,11 +77,11 @@
 
             playerEntity.setAttribute('id', id);
             playerEntity.setAttribute('player-move', "controllerListenerId: #controller-data; navigationMeshClass: environmentGround;");
-            
+
             playerBox.setAttribute('color', color);
             playerBox.appendChild(playerText)
             playerCamera.appendChild(playerBox);
-            
+
             const playerPosition = document.createAttribute('position');
             playerPosition.value = `${position.x} ${position.y} ${position.z}`
             playerCamera.setAttribute('do-something-once-loaded', '');
@@ -190,7 +190,7 @@
     </a-scene>
 
 
-    
+
 </body>
 
 </html>
