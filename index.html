@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu metaverso</title>
+
+    <link rel="icon" type="image/x-icon" href="assets/card.jpg">
+    <style>
+        body {
+            background-color: #000000c5;
+            font-family: 'Courier';
+            display: flex;
+            justify-content: center;
+        }
+
+        .info-section {
+            padding: 15px;
+        }
+
+        header {
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: rgb(255, 255, 255);
+            font-weight: 600;
+            text-shadow: -2px -1px 2px black;
+            margin: 0;
+        }
+
+        p {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: rgb(255, 255, 255);
+            text-shadow: -2px -1px 2px black;
+            margin: 0;
+        }
+
+        input {
+            height: 30px;
+            color: rgb(66, 66, 66);
+            font-size: 25px;
+            vertical-align: middle;
+        }
+
+        button {
+            height: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid rgba(51, 51, 51, 0.726);
+            background-color: #47eafff8;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #34a2b1f8;
+        }
+    </style>
+
+</head>
+
+<body>
+    <section class="info-section">
+        <header>
+            <h1>Bem vindo ao meu Metaverso</h1>
+            <p>Antes de entrar, diga o seu nome</p>
+        </header>
+        <div>
+            <input id="name" type="text" autocomplete="off" required placeholder="Digite seu nome" />
+            <button id="btn_entrar" type="submit" onclick="entrar()">ENTRAR</button>
+        </div>
+    </section>
+
+    <script>
+        const input = document.getElementById('name')
+        function entrar() {
+            if (input.value && input.value.trim() !== "") {
+                saveName(input.value)
+            } else {
+                alert('Nome inválido')
+            }
+        }
+
+        function saveName(name) {
+            sessionStorage.setItem('username', name);
+            location.href = './scene.html'
+        }
+    </script>
+</body>
+
+</html>

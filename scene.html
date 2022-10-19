@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.socket.io/4.5.3/socket.io.min.js"></script>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script>
+        const socket = io('http://localhost:3000');
+        let playerID = "";
+        
+        // executar para limpar a lista de players n jogaveis do server
+        const playerToRemove = sessionStorage.getItem('remove-player');
+        if (playerToRemove) {
+            socket.emit('remove', playerToRemove);
+        }
+        
+        const hexaRange = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
+        
+
+        // função para saber onde que o jogador está
+        AFRAME.registerComponent("trackplayer", {
+            tick: function() {
+                socket.emit('move', {
+                    id: playerID,
+                    position: this.el.object3D.position
+                });
+            }
+        });
+
+        // função faz o set do evento tick no jogador
+        AFRAME.registerComponent("do-something-once-loaded", {
+        init: function() {
+                this.el.setAttribute('trackplayer', '');
+            }
+        });
+
+        function startPlayer() {
+            const playerName = sessionStorage.getItem('username');
+
+            sessionStorage.removeItem('username');
+            playerID = playerName.toLocaleLowerCase().replaceAll(' ', '_');
+            
+            sessionStorage.setItem('remove-player', playerID);
+
+            if (playerName) {
+                const player = {
+                    id: playerID,
+                    name: playerName,
+                    color: getColor(),
+                    position: {x: 0, y: 0, z: 0}
+                }
+
+                socket.emit('add', player);
+            } else {
+                location.href = './index.html';
+            }
+        }
+
+        function createPlayer(id, name, color, position) {
+            const playerEntity = document.createElement('a-entity');
+            const playerCamera = document.createElement('a-camera');
+            const playerBox = document.createElement('a-box');
+            const playerText = document.createElement('a-text');
+
+            const playerTextAttr = document.createAttribute('position');
+            playerTextAttr.value = `-0.033 0.9 -0.032`;
+            playerText.setAttributeNode(playerTextAttr);
+            playerText.setAttribute('value', name);
+            playerText.setAttribute('color', 'white');
+            playerText.setAttribute('side', 'double');
+            playerText.setAttribute('align', 'center');
+
+
+
+            playerEntity.setAttribute('id', id);
+            playerEntity.setAttribute('player-move', "controllerListenerId: #controller-data; navigationMeshClass: environmentGround;");
+            
+            playerBox.setAttribute('color', color);
+            playerBox.appendChild(playerText)
+            playerCamera.appendChild(playerBox);
+            
+            const playerPosition = document.createAttribute('position');
+            playerPosition.value = `${position.x} ${position.y} ${position.z}`
+            playerCamera.setAttribute('do-something-once-loaded', '');
+            playerCamera.setAttributeNode(playerPosition);
+
+
+            playerEntity.appendChild(playerCamera);
+
+            return playerEntity;
+        }
+
+        function createOtherPlayer(id, name, color, position) {
+            const playerBox = document.createElement('a-box');
+            playerBox.setAttribute('id', id);
+            playerBox.setAttribute('color', color);
+            playerBox.setAttribute('position', position);
+
+            const playerText = document.createElement('a-text');
+            playerText.setAttribute('value', name)
+            playerText.setAttribute('color', 'white')
+            const playerTextAttr = document.createAttribute('position');
+            playerTextAttr.value = `-0.033 0.9 -0.032`;
+            playerText.setAttributeNode(playerTextAttr);
+            playerText.setAttribute('side', 'double');
+            playerText.setAttribute('align', 'center');
+
+            playerBox.appendChild(playerText)
+
+            const playerPosition = document.createAttribute('position');
+            playerPosition.value = `${position.x} ${position.y} ${position.z}`;
+            playerBox.setAttributeNode(playerPosition);
+
+            return playerBox;
+        }
+
+        function getColor() {
+            const a = hexaRange[Math.floor((Math.random() * 15) + 1)],
+                b = hexaRange[Math.floor((Math.random() * 15) + 1)],
+                c = hexaRange[Math.floor((Math.random() * 15) + 1)],
+                d = hexaRange[Math.floor((Math.random() * 15) + 1)],
+                e = hexaRange[Math.floor((Math.random() * 15) + 1)],
+                f = hexaRange[Math.floor((Math.random() * 15) + 1)];
+            return `#${a}${b}${c}${d}${e}${f}`;
+        }
+
+        socket.on('newPlayer', (playerinfo) => {
+            const mapa = document.getElementById('mapa');
+            const newPlayer = playerinfo.player;
+            const $player = createPlayer(newPlayer.id, newPlayer.name, newPlayer.color, newPlayer.position);
+            mapa.appendChild($player);
+
+            //monta todos os players que já estão online
+            playerinfo.players.forEach(p => {
+                const $OtherPlayer = createOtherPlayer(p.id, p.name, p.color, p.position);
+                mapa.appendChild($OtherPlayer);
+            });
+
+
+        });
+
+        socket.on('somePlayerAdded', (player) => {
+            const mapa = document.getElementById('mapa');
+            const $player = createOtherPlayer(player.id, player.name, player.color, player.position);
+            mapa.appendChild($player);
+        });
+
+
+        socket.on('somePlayerRemoved', (playersToRemove) => {
+            const oldPlayer = document.getElementById(playersToRemove);
+            if (oldPlayer) {
+                console.log('playersToRemove: ', playersToRemove);
+                document.getElementById(playersToRemove).remove();
+            }
+        });
+
+
+        socket.on('playerMove', (player) => {
+            const playerPosition = document.createAttribute('position');
+            playerPosition.value = `${player.position.x} ${player.position.y} ${player.position.z}`;
+            document.getElementById(player.id)?.setAttributeNode(playerPosition);
+        });
+
+    </script>
+    <title>Meu metaverso</title>
+
+    <link rel="icon" type="image/x-icon" href="assets/card.jpg">
+</head>
+
+<body onload="startPlayer()">
+    <a-scene id="mapa">
+        <a-assets timeout="10000">
+            <img id="sky" src="assets/stars.jpg" crossorigin="anonymous" />
+            <video id="video" autoplay loop>
+                <source src="" type="video/mp4">
+            </video>
+        </a-assets>
+
+
+        <!-- ceu -->
+        <a-sky rotation="0 0 0" color="#FFFFFF" material="src: #sky"></a-sky>
+        <a-plane id="video-border" width="17" height="10" position="0 5 -20" color="rgb(153,102,102)" video-controls>
+            <a-video id="video-display" width="16" height="9" position="0 0 0.1" src="#video">
+            </a-video>
+        </a-plane>
+
+    </a-scene>
+
+
+    
+</body>
+
+</html>
