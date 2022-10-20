@@ -1,5 +1,5 @@
-// const socket = io('https://projeto-metaverso.herokuapp.com/');
-const socket = io('http://localhost:3000');
+const socket = io('https://projeto-metaverso.herokuapp.com/');
+// const socket = io('http://localhost:3000');
 let playerID = "";
 
 // executar para limpar a lista de players n jogaveis do server
