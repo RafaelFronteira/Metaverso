@@ -1,5 +1,5 @@
-const socket = io('https://projeto-metaverso.herokuapp.com/');
-// const socket = io('http://localhost:3000');
+// const socket = io('https://projeto-metaverso.herokuapp.com/');
+const socket = io('http://localhost:3000');
 let playerID = "";
 
 // executar para limpar a lista de players n jogaveis do server
@@ -82,7 +82,6 @@ function createPlayer(id, name, color, position) {
     console.log("controls initialized: ", component, joystick);
     createControls(component, joystick);
 
-
     // Cria a entity do user
     const playerEntity = document.createElement('a-entity');
     playerEntity.setAttribute('id', id);
@@ -164,7 +163,6 @@ socket.on('somePlayerRemoved', (playersToRemove) => {
         document.getElementById(playersToRemove).remove();
     }
 });
-
 
 socket.on('playerMove', (player) => {
     const playerPosition = document.createAttribute('position');
